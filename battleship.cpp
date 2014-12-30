@@ -31,7 +31,7 @@ class ship
 		name = NAME;
 		cout << "Enter first coordinate for " << name << ": ";
 		cin >> coordName;
-		cout << "coordinate is " << coordName << endl;
+		cout << "coordinate is " << coordName << "!" << endl;
 	}
 };
 
