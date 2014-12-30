@@ -24,15 +24,30 @@ class ship
 	int length;
 	string name; 
 	
+	string getCoordinate()
+	{
+		string coordName;
+		while(1)
+		{
+			cin >> coordName;
+			if(coordName[0] > 64 && coordName[0] < 75 && coordName[1] > 47 && coordName[1] < 58)
+				break;
+			cout << "You entered an invalid coordinate. Try again: ";
+		}
+
+		return coordName;
+	}
 	public:
 	ship(string NAME)
 	{
 		string coordName;
 		name = NAME;
 		cout << "Enter first coordinate for " << name << ": ";
-		cin >> coordName;
-		cout << "coordinate is " << coordName << "!" << endl;
+
+		coordName = getCoordinate();
+		cout << "Valid coordinate is " << coordName << endl;	
 	}
+
 };
 
 int main()
