@@ -7,12 +7,23 @@ simple battleship game
 #include <vector>						// vector
 #include <stdlib.h>						// abs
 using namespace std;
-typedef struct
+class coord
 {
+	public:
 	int x;
 	int y;
-	int hit;
-} coord;
+	bool hit;
+	
+	bool operator==(const coord & c)
+	{
+		if(this->x == c.x && this->y == c.y)
+			return true;
+
+		else
+			return false;
+	}
+};
+	
 /* 
 ship class 
 holds all the information about a ship
@@ -162,25 +173,47 @@ class ship
 	{
 		name = NAME;
 		length = LENGTH;
-		cout << "Enter front coordinate for the " << name << ": ";
-
-		coord frontCoord = getCoordinate();
 		vector<coord> validBacks;	
+		
+		cout << "Enter front coordinate for the " << name << ": ";
+		coord frontCoord = getCoordinate();
 		getValidBackEnds(validBacks, frontCoord);
-
 		coord backCoord  = getBackEnd(validBacks);
-		
-		cout << "front is " << frontCoord.x << " " << frontCoord.y << endl;
-		cout << "back is " << backCoord.x << " " << backCoord.y << endl;
-		
 		createFinalCoords(frontCoord, backCoord);
+	
+	}
+
+	bool fireOn()
+	{	
+		cout << "Enter Coordinate to fire onto: ";
+		coord coordFired = getCoordinate();
+
+		for(int i=0;i<blocks.size();i++)
+		{
+			if(blocks[i] == coordFired)
+			{	
+				blocks[i].hit = true;
+				/* check if sunk */
+				return true;
+			}
+		}
+
+		return false;
+
 	}
 
 };
 
 int main()
 {
-	cout << "hello!" << endl;
 	ship* s = new ship("battleship", 3);
+
+	while(1)
+	{
+		if(s->fireOn())
+			cout << "hit!" << endl;
+		else
+			cout << "miss!" << endl;
+	}
 	return 0;
 }
