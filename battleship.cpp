@@ -3,8 +3,9 @@ battleship.cpp
 Mark Brankin 2015
 simple battleship game
 */
-#include <iostream>
-#include <vector>
+#include <iostream>						// cout
+#include <vector>						// vector
+#include <stdlib.h>						// abs
 using namespace std;
 typedef struct
 {
@@ -20,10 +21,10 @@ screen fires at ship and ship returns whether it was a hit or not on that ship
 class ship
 {
 	
-	bool sunk;				// Whether the Ship is sunk
-	vector<coord> blocks;			// The ships vector of all coordinates and hit state
-	int length;				// Length of the Ship in blocks
-	string name; 				// Name of the Ship
+	bool sunk;						// Whether the Ship is sunk
+	vector<coord> blocks;					// The ships vector of all coordinates and hit state
+	int length;						// Length of the Ship in blocks
+	string name; 						// Name of the Ship
 
 	/*
 	Function getCoordinate
@@ -33,19 +34,19 @@ class ship
 	coord getCoordinate()
 	{
 		
-		string coordName;		// string where the name of the coordinate will be stored;
-		while(1)			// Loop forever until the user breaks it with a valid coordinate
+		string coordName;				// string where the name of the coordinate will be stored;
+		while(1)					// Loop forever until the user breaks it with a valid coordinate
 		{
-			cin >> coordName;	// Get the input
+			cin >> coordName;			// Get the input
 			if(coordName[0] > 64 && coordName[0] < 75 && coordName[1] > 47 && coordName[1] < 58 && coordName[2] == 0)
-						// These are the criteria for a valid coordinate, Ascii values of the string
+								// These are the criteria for a valid coordinate, Ascii values of the string
 				break;
 			cout << "You entered an invalid coordinate. Try again: ";
-						// Loop will get to here if the coordinate was invalid
+								// Loop will get to here if the coordinate was invalid
 		}
 					
-		coord returned;			// From here is the conversion to a coordinate
-		returned.x = coordName[0] - 65;	// Take away Ascii values to get the raw value
+		coord returned;					// From here is the conversion to a coordinate
+		returned.x = coordName[0] - 65;			// Subtract Ascii values to get the raw value
 		returned.y = coordName[1] - 48;
 		return returned;
 	}
@@ -55,61 +56,105 @@ class ship
 	Up to a maximum of 4
 	*/
 	void getValidBackEnds(vector<coord> & valids, coord C)
-	{
+	{							// Populate vector with 4 potential back ends
 		coord temp;
+		int dif = length-1;
 		temp = C;
-		temp.x += length;
+		temp.x += dif;
 		valids.push_back(temp);
 		temp = C;
-		temp.x -= length;
+		temp.x -= dif;
 		valids.push_back(temp);
 		temp = C; 
-		temp.y += length;
+		temp.y += dif;
 		valids.push_back(temp);
 		temp = C;
-		temp.y -= length;
+		temp.y -= dif;
 		valids.push_back(temp);
-		temp = C;
 		
-		for(int i=0; i<valids.size(); i++)
+		for(int i=0; i<valids.size(); i++)		//Erase potential back ends which lie outside the screen
 		{
 			if(valids[i].x > 9 || valids[i].x < 0 || valids[i].y > 9 || valids[i].y < 0)
 				valids.erase(valids.begin() + i);
 		}
 		return;
 	}
+
+	/*
+	Function getBackEnd
+	Get the back coordinate from the user, given vector populated with valid back ends given the front coordinate
+	Returns the back coordinate
+	*/
 	coord getBackEnd(vector<coord> valids)
 	{
+								// Ask user for Coordinate
 		cout << "Please enter back coordinate for the " << name << " from these coordinates: " << endl;;
-		char c;
-		bool found = false;
-		coord returned;
-		for(int i=0;i<valids.size();i++)
+		char c; 					// Char used in creation of player-friendly coordinates
+		bool found = false;				// Bool used to break loop if player inputted valid coordinate
+		coord returned;					// Coordinate which will be returned
+		for(int i=0;i<valids.size();i++)		// Display valid back coordinates
 			{
 				c = valids[i].x + 65;
+								// Coords are created from Ascii Values
 				cout << c;
 				c = valids[i].y + 48;
 				cout << c << endl;
 			}
-		while(1)
+		cout << "Enter Coord: ";
+		while(1)					// Loop forever until Player breaks with valid Coordinate
 		{
-			returned = getCoordinate();
-			for(int i=0;i<valids.size();i++)
+			returned = getCoordinate();		// Get Valid Coordinate
+			for(int i=0;i<valids.size();i++)	// check if it matches any of the potentials
 			{
 				if(returned.x == valids[i].x && returned.y == valids[i].y)
 					{
-						found = true;
+						found = true;	// if it does break out of the loop and signal the other loop to break
 						break;
 					}
 			
 			}
-			if(found == true)
+			if(found == true)			// Break out if matching coordinate has been found
 					break;
 			cout << "The Coordinate is not a valid back. Try again: ";
 
 		}
 
 		return returned;
+
+	}
+	/*
+	Function createFinalCoords
+	Creates the vector of blocks the ship will use in the game
+	Returns nothing
+	*/
+	void createFinalCoords(coord frontCoord, coord backCoord)
+	{
+		int* differencer;				// Pointer to coordinate that iterates
+		int difference;					// Difference between coordinates
+		coord temp;					// Temporary coordinate that will be pushed into vector 
+
+		if(frontCoord.x != backCoord.x)			// If the x coordinates are different iterate along x axis			
+		{
+			differencer = &temp.x;
+			difference = frontCoord.x - backCoord.x;
+		}
+		else						// Else iterate along y axis
+		{
+			differencer = &temp.y;
+			difference = frontCoord.y - backCoord.y;
+		}
+
+		for(int i=0;i<=abs(difference);i++)		// This iterates and pushes the blocks into the list
+		{
+			temp = frontCoord;
+			if(difference < 0)
+				*differencer += i;
+			else
+				*differencer -= i;
+				
+			blocks.push_back(temp);
+
+		}
 
 	}
 	public:
@@ -127,6 +172,8 @@ class ship
 		
 		cout << "front is " << frontCoord.x << " " << frontCoord.y << endl;
 		cout << "back is " << backCoord.x << " " << backCoord.y << endl;
+		
+		createFinalCoords(frontCoord, backCoord);
 	}
 
 };
