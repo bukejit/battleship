@@ -32,7 +32,7 @@ screen fires at ship and ship returns whether it was a hit or not on that ship
 class ship
 {
 	
-	bool sunk;						// Whether the Ship is sunk
+	bool sunk=false;					// Whether the Ship is sunk
 	vector<coord> blocks;					// The ships vector of all coordinates and hit state
 	int length;						// Length of the Ship in blocks
 	string name; 						// Name of the Ship
@@ -70,7 +70,7 @@ class ship
 	{							// Populate vector with 4 potential back ends
 		coord temp;
 		int dif = length-1;
-		temp = C;
+		temp = C; //hello
 		temp.x += dif;
 		valids.push_back(temp);
 		temp = C;
@@ -168,7 +168,35 @@ class ship
 		}
 
 	}
+
+	void checkIfSunk()
+	{
+		bool notSunk=false;
+		for(int i=0;i<blocks.size();i++)
+		{
+			if(blocks[i].hit == 0)
+			{
+				notSunk = true;
+				break;
+			}
+		}
+
+		if(!notSunk)
+		{
+			sunk = true;
+		}
+	}
 	public:
+	
+	void resetAllBlocks()
+	{
+		for(int i=0;i<blocks.size();i++)
+		{
+			blocks[i].hit = 0;
+		}
+
+	}
+
 	ship(string NAME, int LENGTH)
 	{
 		name = NAME;
@@ -183,37 +211,122 @@ class ship
 	
 	}
 
-	bool fireOn()
+	bool fireOn(coord c)
 	{	
-		cout << "Enter Coordinate to fire onto: ";
-		coord coordFired = getCoordinate();
-
+		bool hit = false;
+		
 		for(int i=0;i<blocks.size();i++)
 		{
-			if(blocks[i] == coordFired)
+			if(blocks[i] == c)
 			{	
 				blocks[i].hit = true;
+				hit = true;
 				/* check if sunk */
-				return true;
+				
 			}
 		}
-
+		
+		if(hit)
+		{
+			checkIfSunk();
+			return true;
+		}
 		return false;
 
 	}
+
+	bool getSunkStatus()
+	{
+		return sunk;
+	}
+
+};
+
+
+class screen
+{
+	vector<ship*> Ships;
+	string names[5] = {"Aircraft Carrier", "Battleship", "Submarine", "Destroyer", "Patrol Boat"};
+	int lengths[5] = {5,4,3,3,2};	
+
+
+	bool checkCollisions(ship* s)
+	{
+		coord c;
+		bool hitPassedShip=false;
+		bool hitAddedShips=false;
+		for(int i=0;i<10;i++)
+			for(int j=0;j<10;j++)
+			{
+				c.x = i;
+				c.y = j;
+				hitPassedShip = s->fireOn(c);
+				
+				for(int k=0;k<Ships.size();k++)
+				{
+					if(Ships[k]->fireOn(c))
+					{
+						hitAddedShips = true;
+						break;
+					}
+
+					else
+						hitAddedShips = false;
+				}
+
+				if(hitPassedShip && hitAddedShips)
+				{
+					cout << i << "   " << j << endl;
+					resetAllBlocks();		
+					return false;
+				}
+			}
+		
+		resetAllBlocks();
+		s->resetAllBlocks();
+		return true;
+		
+	}
+
+	void resetAllBlocks()
+	{
+		for(int i=0;i<Ships.size();i++)
+		{
+			Ships[i]->resetAllBlocks();
+		}
+
+	}
+	public:
+	
+	screen()
+	{
+		bool noCollision=false;
+		for(int i=0;i<5;i++)
+		{
+			noCollision=false;
+			while(!noCollision)
+			{
+				ship* s = new ship(names[i], lengths[i]);
+				if(checkCollisions(s))
+				{
+					noCollision = true;
+					Ships.push_back(s);
+				}
+
+				else
+				{	
+					cout << "Failed!" << endl;
+					delete s;			
+				}
+			}
+		}
+	}
+
 
 };
 
 int main()
 {
-	ship* s = new ship("battleship", 3);
-
-	while(1)
-	{
-		if(s->fireOn())
-			cout << "hit!" << endl;
-		else
-			cout << "miss!" << endl;
-	}
-	return 0;
+	
+	screen* s = new screen();
 }
