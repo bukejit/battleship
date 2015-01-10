@@ -169,25 +169,34 @@ class ship
 
 	}
 
+	/*
+	Function checkIfSunk
+	sets the SUNK variable if all blocks have been hit
+	returns nothing
+	*/
 	void checkIfSunk()
 	{
-		bool notSunk=false;
-		for(int i=0;i<blocks.size();i++)
+		bool notSunk=false;				// This will be set if any of the blocks are not hit
+		for(int i=0;i<blocks.size();i++)		// Cycle through the blocks
 		{
-			if(blocks[i].hit == 0)
+			if(blocks[i].hit == 0)			// If any of them are not hit then set the notSunk variable and break
 			{
 				notSunk = true;
 				break;
 			}
 		}
 
-		if(!notSunk)
+		if(!notSunk)					// set sunk to true if it got all the way through that loop
 		{
 			sunk = true;
 		}
 	}
 	public:
-	
+	/*
+	Function resetAllBlocks
+	Resets all the hit state of all the blocks to false
+	Returns nothing
+	*/
 	void resetAllBlocks()
 	{
 		for(int i=0;i<blocks.size();i++)
@@ -197,23 +206,35 @@ class ship
 
 	}
 
+	/*
+	Ship Constructor
+	Constructs the ship, asking the user to input the coordinates of the front and back end
+	Parameters: the NAME of the ship, the LENGTH of the ship
+	Returns nothing
+	*/
 	ship(string NAME, int LENGTH)
 	{
-		name = NAME;
+		name = NAME;					// Set the class' variables to the parameters given			
 		length = LENGTH;
-		vector<coord> validBacks;	
+		vector<coord> validBacks;			// initialise the vector which will hold the valid back ends to show the user
 		
 		cout << "Enter front coordinate for the " << name << ": ";
-		coord frontCoord = getCoordinate();
-		getValidBackEnds(validBacks, frontCoord);
-		coord backCoord  = getBackEnd(validBacks);
-		createFinalCoords(frontCoord, backCoord);
+		coord frontCoord = getCoordinate();		// ask the user for the front coordinate
+		getValidBackEnds(validBacks, frontCoord);	// calculate the valid back end for the given coordinate
+		coord backCoord  = getBackEnd(validBacks);	// ask the user for the back-end coord out of the valids given
+		createFinalCoords(frontCoord, backCoord);	// create the vector of blocks between the front and back ends for play
 	
 	}
-
+	
+	/*
+	Function fireOn
+	This is the function used for play for firing on the ship and seeing if its been hit/sunk
+	Parameters: The coordinate fired upon
+	Returns: The boolean of whether the ship has been hit or not
+	*/
 	bool fireOn(coord c)
 	{	
-		bool hit = false;
+		bool hit = false;			
 		
 		for(int i=0;i<blocks.size();i++)
 		{
@@ -221,7 +242,6 @@ class ship
 			{	
 				blocks[i].hit = true;
 				hit = true;
-				/* check if sunk */
 				
 			}
 		}
