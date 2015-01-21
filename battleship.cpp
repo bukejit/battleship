@@ -6,6 +6,7 @@ simple battleship game
 #include <iostream>						// cout
 #include <vector>						// vector
 #include <stdlib.h>						// abs
+#include <ncurses.h>					//ncurses graphical things
 using namespace std;
 class coord
 {
@@ -272,22 +273,45 @@ This is achieved using ascii escape sequences
 */
 class screen
 {
-	coord seaState[10][10];
+
+	coord seaState[10][10];					// The current state of the sea, a 10x10 grid
 	
+	/*
+	Function clear
+	outputs the ansi escape code to clear the screen
+	Parameters: None
+	Returns: None
+	*/
+	void clear()
+	{
+		char ESC = 0x1B;
+		cout << ESC << "[2J";		
+	}
+	/*
+	Function moveCursor
+	Outputs the ansi escape to the cursor to the line and column given
+	*/
+	void moveCursor(int line, int column)
+	{
+		cout << "\033[" << line << ";" << column << "H";		
+	}
+
 	/*
 	Function drawSea
 	This function draws the initial grid which the ships will be drawn onto
 	Parameters: None
 	Returns: None
-	*/
-	
+	*/	
 	public:	
 	void drawSea()
 	{
-		char ESC = 0x1B;
-		cout << ESC << "[2J";
+		
+		initscr();
+		printw("Hello World Ncurses!");
+		refresh();
+		getch();
+		endwin();
 		/*ANSI Escape Stuffs */
-		return;
 	}
 	
 	/*
@@ -417,7 +441,7 @@ class sea
 	sea()
 	{
 		bool noCollision=false;					// boolean to record if there has been a collision
-		for(int i=0;i<5;i++)					// create 5 ships
+	/*	for(int i=0;i<5;i++)					// create 5 ships
 		{
 			noCollision=false;
 			while(!noCollision)					// loop until the user makes a ship without a collision
@@ -436,7 +460,7 @@ class sea
 				}
 			}
 		}
-		
+	*/	
 		coord grid[10][10];
 		sn = new screen(grid);
 	}
