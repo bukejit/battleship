@@ -25,6 +25,12 @@ class coord
 	}
 };
 
+typedef struct
+{
+	bool occupied;
+	bool firedOn;
+} screenBlock;
+
 /*
 Function getCoordinate
 Loops, asking user for Coordinate until valid one is inputted
@@ -274,26 +280,24 @@ This is achieved using ascii escape sequences
 class screen
 {
 
-	coord seaState[10][10];					// The current state of the sea, a 10x10 grid
+	screenBlock seaState[10][10];					// The current state of the sea, a 10x10 grid
 	
 	/*
-	Function clear
-	outputs the ansi escape code to clear the screen
-	Parameters: None
-	Returns: None
+	Private Function placeShips
+	Places the ship blocks on the screen
+	Parameters:None
+	returns:None
 	*/
-	void clear()
+	void placeShips()
 	{
-		char ESC = 0x1B;
-		cout << ESC << "[2J";		
-	}
-	/*
-	Function moveCursor
-	Outputs the ansi escape to the cursor to the line and column given
-	*/
-	void moveCursor(int line, int column)
-	{
-		cout << "\033[" << line << ";" << column << "H";		
+		for(int j=0;j<10;j++)
+		{
+			for(int i=0;i<10;i++)
+			{
+				if(seaState[i][j].occupied)
+						mvaddch(2+(j*2), 4+(i*4), 'x');
+			}
+		}
 	}
 
 	/*
@@ -306,8 +310,32 @@ class screen
 	void drawSea()
 	{
 		
-		initscr();
-		printw("Hello World Ncurses!");
+		initscr();							// Initialises the ncurses screen
+
+		for(int i=0;i<10;i++)				// Draw the Horizontal axis
+			mvaddch(0,4 + (i*4), 'A'+i);
+	
+		for(int i=0;i<10;i++)				// Vertical Lines of the Table
+		{
+			move(0,2+(i*4));
+			vline(ACS_VLINE, 21);
+		}
+		
+		for(int i=0;i<10;i++)				// Horizontal Lines of the Table
+		{
+				move(1+(i*2),0);
+				hline(ACS_HLINE, 42);
+		}
+		for(int i=0;i<10;i++)				//Horizontal Axis
+		{
+			mvaddch(2+(i*2),1, '0' + i);
+		}	
+		
+		for(int i=0;i<10;i++)				//Draws a '+' where the lines cross on the table to make it pretty
+			for(int j=0;j<10;j++)
+				mvaddch(1+(i*2),2+(j*4),ACS_PLUS);
+
+		placeShips();
 		refresh();
 		getch();
 		endwin();
@@ -320,11 +348,16 @@ class screen
 	It is be passed a 2D array which the ships will have filled in.
 	This shows the positions of the ships so that they can be drawn
 	*/
-	screen(coord grid[10][10])
+	screen(bool grid[10][10])
 	{
+
 		for(int i=0;i<10;i++)
 			for(int j=0;j<10;j++)
-				grid[i][j] = seaState[i][j];
+			{
+				seaState[i][j].occupied = grid[i][j];
+				seaState[i][j].firedOn = false;
+			}
+		
 		drawSea();
 	}
 
@@ -369,7 +402,6 @@ class sea
 				c.y = j;
 				hitPassedShip = s->fireOn(c);
 			
-				
 				for(int k=0;k<Ships.size();k++)
 				{
 					if(Ships[k]->fireOn(c))
@@ -431,6 +463,30 @@ class sea
 			
 		return hit;
 	}
+
+	
+	/*
+	Private Function getSeaState
+	Grabs what the sea looks like at the start of the game to pass to the screen to be displayed
+	Parameters: 10x10 array bools, the coordinates occupied
+	Returns: None
+	*/
+	void getSeaState(bool grid[][10])
+	{
+		coord c;
+		for(int i=0;i<10;i++)
+		{
+			for(int j=0;j<10;j++)
+			{
+				c.x = i;
+				c.y = j;
+				grid[j][i] = fireOn(c);
+			}
+				
+		}
+		resetAllBlocks();
+		return;
+	}
 	public:
 	/*
 	Public sea Constructor
@@ -441,7 +497,7 @@ class sea
 	sea()
 	{
 		bool noCollision=false;					// boolean to record if there has been a collision
-	/*	for(int i=0;i<5;i++)					// create 5 ships
+		for(int i=0;i<5;i++)					// create 5 ships
 		{
 			noCollision=false;
 			while(!noCollision)					// loop until the user makes a ship without a collision
@@ -460,8 +516,9 @@ class sea
 				}
 			}
 		}
-	*/	
-		coord grid[10][10];
+		
+		bool grid[10][10];
+		getSeaState(grid);
 		sn = new screen(grid);
 	}
 	
