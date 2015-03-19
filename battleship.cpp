@@ -25,37 +25,220 @@ class coord
 	}
 };
 
-typedef struct
+
+typedef struct							// This struct is for drawing the grid of the sea.
 {
-	bool occupied;
-	bool firedOn;
+	bool occupied;						
+	bool firedOn;						
 } screenBlock;
 
+typedef struct
+{
+	bool hit;
+	bool sunk;
+	string name;
+} hitSinkStatus;
+
+
 /*
-Function getCoordinate
-Loops, asking user for Coordinate until valid one is inputted
-Returns Valid Coordinate
-*/	
-coord getCoordinate()
+screen class
+This class is in charge of drawing the board onto the player's screen for play
+This is achieved using the ncurses library
+*/
+class screen
 {
 
-	string coordName;					// string where the name of the coordinate will be stored;
-	while(1)							// Loop forever until the user breaks it with a valid coordinate
+
+	string lines[5];
+	int linesUsed;
+
+
+	/* 
+		Function moveCursorToBase
+		Moves the cursor back under the grids where messages to the user are written
+		Parameters: None
+		Returns: None
+	*/
+
+	void moveCursorToLine(int L)
 	{
-		cin >> coordName;				// Get the input
-		if(coordName[0] > 64 && coordName[0] < 75 && coordName[1] > 47 && coordName[1] < 58 && coordName[2] == 0)
-										// These are the criteria for a valid coordinate, Ascii values of the string
-			break;
+		move(22+L,1);
+		return;	
+	}
+
+	/*
+	Function drawSea
+	This function draws the initial grid which the ships will be drawn onto
+	Parameters: None
+	Returns: None
+	*/	
+	void drawSea()
+	{
+		
+		initscr();							// Initialises the ncurses screen
+		
+		start_color();
+		init_pair(1, COLOR_RED, COLOR_CYAN);
+		//attron(COLOR_PAIR(1));
+
+		for(int i=0;i<10;i++)				// Draw the Horizontal axis
+			mvaddch(0,4 + (i*4), 'A'+i);
 	
-	cout << "You entered an invalid coordinate. Try again: ";
-										// Loop will get to here if the coordinate was invalid
-}
+		for(int i=0;i<10;i++)				// Vertical Lines of the Table
+		{
+			move(0,2+(i*4));
+			vline(ACS_VLINE, 21);
+		}
+		
+		for(int i=0;i<10;i++)				// Horizontal Lines of the Table
+		{
+				move(1+(i*2),0);
+				hline(ACS_HLINE, 42);
+		}
+		for(int i=0;i<10;i++)				//Horizontal Axis
+		{
+			mvaddch(2+(i*2),1, '0' + i);
+		}	
+		
+		for(int i=0;i<10;i++)				//Draws a '+' where the lines cross on the table to make it pretty
+			for(int j=0;j<10;j++)
+				mvaddch(1+(i*2),2+(j*4),ACS_PLUS);
+
+		//attroff(1);
+		refresh();
+	
+	}
+
+/*
+	Private Function clearLines
+	Clears the Lines of messages to the User
+	Parameters: None
+	Returns: None
+
+*/
+
+	void refreshLines()
+	{
+
+			for(int i=0;i<5;i++)
+			{
+					moveCursorToLine(i);
+					printw("                                                                                            ");
+					moveCursorToLine(i);
+					printw(&lines[4-i][0]);	
+			}
 			
-coord returned;							// From here is the conversion to a coordinate
-returned.x = coordName[0] - 65;			// Subtract Ascii values to get the raw value
-returned.y = coordName[1] - 48;
-return returned;
-}
+			moveCursorToLine(5);
+			printw("                                                                                                 ");
+			moveCursorToLine(5);
+	}
+
+
+/*
+	Private Function gettCoordString
+	gets the string of the coordinate from the user and also inputs it into the Lines of the previous messages to the string
+	Parameters: char array to store input
+	Returns: None
+*/
+
+	void getCoordString(char coordName[])
+	{
+			getstr(coordName);
+			printMessage(coordName);
+	}
+	
+	public:	
+/*
+	Function getCoordinate
+	Loops, asking user for Coordinate until valid one is inputted
+	Returns Valid Coordinate
+	*/	
+	coord getCoordinate()
+	{
+
+			char coordName[5];					// string where the name of the coordinate will be stored;
+			while(1)										// Loop forever until the user breaks it with a valid coordinate
+			{
+																	// Get the input
+				getCoordString(coordName);
+				
+				if(coordName[0] > 64 && coordName[0] < 75 && coordName[1] > 47 && coordName[1] < 58 && coordName[2] == 0)
+															// These are the criteria for a valid coordinate, Ascii values of the string
+					break;
+		
+			printMessage("You entered an invalid coordinate. Try again: ");
+														// Loop will get to here if the coordinate was invalid
+			}
+			
+	coord returned;							// From here is the conversion to a coordinate
+	returned.x = coordName[0] - 65;			// Subtract Ascii values to get the raw value
+	returned.y = coordName[1] - 48;
+	return returned;
+	}
+
+
+	/*
+	Public Function printMessage
+	Uses the printw and move functions of ncurses to print the message to the player in the correct place
+	Parameters: String message
+	Returns: None
+	*/
+
+	void printMessage(const string message)
+	{
+				
+			for(int i=4;i>0;i--)
+			{
+					lines[i] = lines[i-1];
+			}
+			
+			lines[0] = message;
+			
+			refreshLines();
+
+
+	}
+
+/*
+	Public Function placeShips
+	Places the ship blocks on the screen
+	Parameters:screenBlock 2d array of the current board
+	returns:None
+	*/
+	void placeShips(screenBlock seaState[10][10])
+	{
+		for(int j=0;j<10;j++)
+		{
+			for(int i=0;i<10;i++)
+			{
+				if(seaState[i][j].occupied)
+						mvaddch(2+(j*2), 4+(i*4), 'x');
+			}
+		}
+	}
+
+
+	
+	
+	/*
+	screen constructor
+	This is called by the sea constructor at the start of the game.
+	It is be passed a 2D array which the ships will have filled in.
+	This shows the positions of the ships so that they can be drawn
+	*/
+	screen()
+	{
+				linesUsed = 0;
+				drawSea();
+				//attroff(COLOR_PAIR(1));
+
+	}
+
+};
+
+
+
+
 
 /* 
 ship class 
@@ -69,7 +252,7 @@ class ship
 	vector<coord> blocks;				// The ships vector of all coordinates and hit state
 	int length;							// Length of the Ship in blocks
 	string name; 						// Name of the Ship
-
+	screen *sn;
 	
 	/*
 	Function getValidBackEnds
@@ -96,7 +279,10 @@ class ship
 		for(int i=0; i<valids.size(); i++)		//Erase potential back ends which lie outside the screen
 		{
 			if(valids[i].x > 9 || valids[i].x < 0 || valids[i].y > 9 || valids[i].y < 0)
+			{
 				valids.erase(valids.begin() + i);
+				i=0;
+			}
 		}
 		return;
 	}
@@ -109,22 +295,30 @@ class ship
 	coord getBackEnd(vector<coord> valids)
 	{
 												// Ask user for Coordinate
-		cout << "Please enter back coordinate for the " << name << " from these coordinates: " << endl;;
-		char c; 								// Char used in creation of player-friendly coordinates
+		
+		string message = "Please enter back coordinate for the ";
+		string coordString;
+		message.append(name);
+		message.append(" from these coordinates: \n");	
+		char c; 											// Char used in creation of player-friendly coordinates
 		bool found = false;						// Bool used to break loop if player inputted valid coordinate
 		coord returned;							// Coordinate which will be returned
+		sn->printMessage(&message[0]);
+
 		for(int i=0;i<valids.size();i++)		// Display valid back coordinates
 			{
 				c = valids[i].x + 65;
 												// Coords are created from Ascii Values
-				cout << c;
+				coordString += c;
 				c = valids[i].y + 48;
-				cout << c << endl;
+				coordString += c;
+				coordString += ' ';	
 			}
-		cout << "Enter Coord: ";
+
+		sn->printMessage(&coordString[0]);
 		while(1)								// Loop forever until Player breaks with valid Coordinate
 		{
-			returned = getCoordinate();			// Get Valid Coordinate
+			returned = sn->getCoordinate();			// Get Valid Coordinate
 			for(int i=0;i<valids.size();i++)	// check if it matches any of the potentials
 			{
 				if(returned.x == valids[i].x && returned.y == valids[i].y)
@@ -136,8 +330,7 @@ class ship
 			}
 			if(found == true)					// Break out if matching coordinate has been found
 					break;
-			cout << "The Coordinate is not a valid back. Try again: ";
-
+			sn->printMessage("The Coordinate is not a valid back. Try again: ");
 		}
 
 		return returned;
@@ -212,6 +405,7 @@ class ship
 		for(int i=0;i<blocks.size();i++)
 		{
 			blocks[i].hit = 0;
+			sunk = false;
 		}
 
 	}
@@ -222,18 +416,24 @@ class ship
 	Parameters: the NAME of the ship, the LENGTH of the ship
 	Returns nothing
 	*/
-	ship(string NAME, int LENGTH)
+	ship(string NAME, int LENGTH, screen* SN)
 	{
 		name = NAME;								// Set the class' variables to the parameters given			
 		length = LENGTH;
-		vector<coord> validBacks;					// initialise the vector which will hold the valid back ends to show the user
+		sn = SN;
 		
-		cout << "Enter front coordinate for the " << name << ": ";
-		coord frontCoord = getCoordinate();			// ask the user for the front coordinate
+		vector<coord> validBacks;					// initialise the vector which will hold the valid back ends to show the user
+	
+		string message = "Enter front coordinate for the ";
+		message.append(name);
+		message.append(": ");	
+		sn->printMessage(&message[0]);
+		coord frontCoord = sn->getCoordinate();			// ask the user for the front coordinate
 		getValidBackEnds(validBacks, frontCoord);	// calculate the valid back end for the given coordinate
 		coord backCoord  = getBackEnd(validBacks);	// ask the user for the back-end coord out of the valids given
 		createFinalCoords(frontCoord, backCoord);	// create the vector of blocks between the front and back ends for play
-	
+
+
 	}
 	
 	/*
@@ -269,100 +469,12 @@ class ship
 	{
 		return sunk;
 	}
-
+	
+	string getName()
+	{
+		return name;
+	}
 };
-
-/*
-screen class
-This class is in charge of drawing the board onto the player's screen for play
-This is achieved using ascii escape sequences
-*/
-class screen
-{
-
-	screenBlock seaState[10][10];					// The current state of the sea, a 10x10 grid
-	
-	/*
-	Private Function placeShips
-	Places the ship blocks on the screen
-	Parameters:None
-	returns:None
-	*/
-	void placeShips()
-	{
-		for(int j=0;j<10;j++)
-		{
-			for(int i=0;i<10;i++)
-			{
-				if(seaState[i][j].occupied)
-						mvaddch(2+(j*2), 4+(i*4), 'x');
-			}
-		}
-	}
-
-	/*
-	Function drawSea
-	This function draws the initial grid which the ships will be drawn onto
-	Parameters: None
-	Returns: None
-	*/	
-	public:	
-	void drawSea()
-	{
-		
-		initscr();							// Initialises the ncurses screen
-
-		for(int i=0;i<10;i++)				// Draw the Horizontal axis
-			mvaddch(0,4 + (i*4), 'A'+i);
-	
-		for(int i=0;i<10;i++)				// Vertical Lines of the Table
-		{
-			move(0,2+(i*4));
-			vline(ACS_VLINE, 21);
-		}
-		
-		for(int i=0;i<10;i++)				// Horizontal Lines of the Table
-		{
-				move(1+(i*2),0);
-				hline(ACS_HLINE, 42);
-		}
-		for(int i=0;i<10;i++)				//Horizontal Axis
-		{
-			mvaddch(2+(i*2),1, '0' + i);
-		}	
-		
-		for(int i=0;i<10;i++)				//Draws a '+' where the lines cross on the table to make it pretty
-			for(int j=0;j<10;j++)
-				mvaddch(1+(i*2),2+(j*4),ACS_PLUS);
-
-		placeShips();
-		refresh();
-		getch();
-		endwin();
-		/*ANSI Escape Stuffs */
-	}
-	
-	/*
-	screen constructor
-	This is called by the sea constructor at the start of the game.
-	It is be passed a 2D array which the ships will have filled in.
-	This shows the positions of the ships so that they can be drawn
-	*/
-	screen(bool grid[10][10])
-	{
-
-		for(int i=0;i<10;i++)
-			for(int j=0;j<10;j++)
-			{
-				seaState[i][j].occupied = grid[i][j];
-				seaState[i][j].firedOn = false;
-			}
-		
-		drawSea();
-	}
-
-};
-
 
 
 
@@ -376,7 +488,7 @@ class sea
 	string names[5] = {"Aircraft Carrier", "Battleship", "Submarine", "Destroyer", "Patrol Boat"};
 	int lengths[5] = {5,4,3,3,2};				//Names and Lengths of the ships
 	screen* sn;
-
+	screenBlock grid[10][10] = {0};
 	/*
 	Private Function checkCollisions
 	Checks whether the passed ship collides with already constructed ships
@@ -448,20 +560,24 @@ class sea
 	Private Function fireOn
 	Calls the fireOn function for all the ships and returns whether it was a hit or not
 	Parameters: coord c, the coordinate fired upon
-	Return: bool hit, whether that was a hit or a miss
+	Return: hitSinkStatus hit, whether that was a hit or a miss
 	*/
 	
-	bool fireOn(coord c)
+	hitSinkStatus fireOn(coord c)
 	{
-		bool hit;
+		hitSinkStatus h;
 		
 		for(int i=0;i<Ships.size();i++)
 		{	
-				if((hit = Ships[i]->fireOn(c)))
-						break;
+				if((h.hit = Ships[i]->fireOn(c)))
+				{
+					h.sunk = Ships[i]->getSunkStatus();
+					h.name = Ships[i]->getName();
+					break;
+				}
 		}
 			
-		return hit;
+		return h;
 	}
 
 	
@@ -471,16 +587,19 @@ class sea
 	Parameters: 10x10 array bools, the coordinates occupied
 	Returns: None
 	*/
-	void getSeaState(bool grid[][10])
+	void getSeaState()
 	{
 		coord c;
+		hitSinkStatus h;
+		
 		for(int i=0;i<10;i++)
 		{
 			for(int j=0;j<10;j++)
 			{
 				c.x = i;
 				c.y = j;
-				grid[j][i] = fireOn(c);
+				h = fireOn(c);
+				grid[i][j].occupied = h.hit;
 			}
 				
 		}
@@ -488,38 +607,43 @@ class sea
 		return;
 	}
 	public:
-	/*
+
+	
+/*
 	Public sea Constructor
 	Constructs each ship for play, checks whether they collide.
 	Parameters: None
 	Returns: Constructed screen
 	*/		
 	sea()
-	{
+	{	
+		sn = new screen();
 		bool noCollision=false;					// boolean to record if there has been a collision
 		for(int i=0;i<5;i++)					// create 5 ships
 		{
 			noCollision=false;
 			while(!noCollision)					// loop until the user makes a ship without a collision
 			{
-				ship* s = new ship(names[i], lengths[i]);
+				ship* s = new ship(names[i], lengths[i], sn);
 				if(checkCollisions(s))
 				{
 					noCollision = true;
 					Ships.push_back(s);			// put the ship onto the vector if it doesn't collide
+					getSeaState();
+					sn->placeShips(grid);	
+
 				}
 
 				else
 				{	
-					cout << "This Ship has collided with another, please try again." << endl;
+					sn->printMessage("This Ship has collided with another, please try again.");
 					delete s;					// delete and try again if it did collide	
 				}
 			}
 		}
 		
-		bool grid[10][10];
-		getSeaState(grid);
-		sn = new screen(grid);
+		getSeaState();
+		sn->placeShips(grid);	
 	}
 	
 
@@ -532,22 +656,27 @@ class sea
 	void play()
 	{
 		bool win = false;
-		bool hit = false;
+		hitSinkStatus h;
 		coord c;
 
 		while(!win)
 		{
-			cout << "Enter Coordinate to Fire: " << endl;
-			c =	getCoordinate();
-			hit = fireOn(c);
+			sn-> printMessage("Enter Coordinate to Fire: ");
+			c =	sn->getCoordinate();
+			h = fireOn(c);
 			
-			if(hit)
+			if(h.hit)
 			{	
-				cout << "hit!" << endl;
+				sn->printMessage("hit!");
+				if(h.sunk)
+				{
+
+					string srm = "You sunk the " + h.name + "!";
+					sn->printMessage(&srm[0]);
+				}
 			}
 			else
-				cout << "miss!" << endl;	
-
+					sn->printMessage("miss!");
 		}
 
 	}
