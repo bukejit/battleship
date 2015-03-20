@@ -211,8 +211,15 @@ class screen
 		{
 			for(int i=0;i<10;i++)
 			{
-				if(seaState[i][j].occupied)
+				if(seaState[i][j].firedOn)
+				{
+					if(seaState[i][j].occupied)
 						mvaddch(2+(j*2), 4+(i*4), 'x');
+					else
+						mvaddch(2+(j*2), 4+(i*4), 'o');
+				}
+				else if(seaState[i][j].occupied)
+						mvaddch(2+(j*2), 4+(i*4), ACS_CKBOARD);
 			}
 		}
 	}
@@ -619,7 +626,7 @@ class sea
 	{	
 		sn = new screen();
 		bool noCollision=false;					// boolean to record if there has been a collision
-		for(int i=0;i<5;i++)					// create 5 ships
+		for(int i=4;i<5;i++)					// create 5 ships
 		{
 			noCollision=false;
 			while(!noCollision)					// loop until the user makes a ship without a collision
@@ -665,6 +672,8 @@ class sea
 			c =	sn->getCoordinate();
 			h = fireOn(c);
 			
+			grid[c.x][c.y].firedOn = true;		
+			
 			if(h.hit)
 			{	
 				sn->printMessage("hit!");
@@ -677,7 +686,10 @@ class sea
 			}
 			else
 					sn->printMessage("miss!");
+		
+		sn->placeShips(grid);
 		}
+
 
 	}
 
