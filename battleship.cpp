@@ -495,7 +495,7 @@ class sea
 	string names[5] = {"Aircraft Carrier", "Battleship", "Submarine", "Destroyer", "Patrol Boat"};
 	int lengths[5] = {5,4,3,3,2};				//Names and Lengths of the ships
 	screen* sn;
-	screenBlock grid[10][10] = {0};
+	screenBlock grid[10][10];// = {{0}};
 	/*
 	Private Function checkCollisions
 	Checks whether the passed ship collides with already constructed ships

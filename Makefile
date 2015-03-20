@@ -1,5 +1,5 @@
 all: bs
 
 bs: battleship.cpp
-	g++ battleship.cpp -o b -g -Wno-c++11-extensions -l ncurses
+	g++ battleship.cpp -o b -g -std=c++11 -l ncurses
 	ctags -R
