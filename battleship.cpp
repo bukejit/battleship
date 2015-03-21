@@ -4,9 +4,13 @@ Mark Brankin 2015
 simple battleship game
 */
 #include <iostream>						// cout
-#include <vector>						// vector
+#include <vector>							// vector
 #include <stdlib.h>						// abs
 #include <ncurses.h>					//ncurses graphical things
+#include <sys/socket.h>				// Internet Protocol Family
+#include <netinet/in.h>				// Internet domain Addresses
+#include <arpa/inet.h>
+
 using namespace std;
 class coord
 {
@@ -484,6 +488,53 @@ class ship
 };
 
 
+/*
+Interface Class
+This class uses tcp/ip to communicate to the server so there can be online play
+*/
+
+class interface
+{
+		
+	int sockfd; 						//the socket
+
+		
+	public:
+	
+	/*
+	Public Function connectServer
+	Connects to the Server for online play
+	Parameters: None
+	Returns: Integer: Success/Fail of the Connection
+	*/
+	void connectServer()
+	{
+			struct sockaddr_in servaddr;
+			char addr[50] = "192.168.0.12";
+	
+			
+			sockfd = socket(AF_INET, SOCK_STREAM, 0);
+			memset(&servaddr, 0, sizeof(servaddr));
+			servaddr.sin_family = AF_INET;
+			servaddr.sin_addr.s_addr=inet_addr(addr);
+			servaddr.sin_port=htons(32000);
+		
+	
+
+
+			connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
+			
+			sendto(sockfd,"hellofrombattleship",20, 0, (struct sockaddr*)&servaddr,sizeof(servaddr));
+
+
+	}
+
+	
+
+
+};
+
+
 
 /*
 sea class
@@ -625,6 +676,8 @@ class sea
 	sea()
 	{	
 		sn = new screen();
+		interface *I = new interface();
+		I->connectServer();
 		bool noCollision=false;					// boolean to record if there has been a collision
 		for(int i=4;i<5;i++)					// create 5 ships
 		{
